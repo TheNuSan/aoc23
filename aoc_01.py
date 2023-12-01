@@ -15,13 +15,17 @@ def code1(x):
 keys={"one":1, "two": 2, "three":3, "four":4, "five":5, "six":6, "seven":7, "eight":8, "nine":9}
 for i in range(1,10): keys[str(i)]=i
 
+def findkeys(x, searchfunc):
+    return list(sorted(filter(lambda a : a[0]>-1, [[searchfunc(x,k),v] for k,v in keys.items()])))
+
 def code2(x):
-    mastart = list(sorted(filter(lambda a : a[0]>-1, [[x.find(k),k,v] for k,v in keys.items()])))
-    maend = list(sorted(filter(lambda a : a[0]>-1, [[x.rfind(k),k,v] for k,v in keys.items()])))
-    #return x+": "+"".join(map(lambda a: str(a[2]), mastart))+"\n"
-    #return x+": "+str(mastart[0][2])+str(maend[-1][2])+"\n"
-    return int(str(mastart[0][2])+str(maend[-1][2]))
-    #return int(str(ma[0][2])+str(ma[-1][2]))
+    mastart = findkeys(x, lambda a,b: a.find(b))
+    maend = findkeys(x, lambda a,b: a.rfind(b))
+    #return x+": "+"".join(map(lambda a: str(a[1]), mastart))+"\n"
+    #return x+": "+str(mastart[0][1])+str(maend[-1][1])+"\n"
+    return int(str(mastart[0][1])+str(maend[-1][1]))
+    #return int(str(ma[0][1])+str(ma[-1][1]))
 
 #print(''.join(map(code2,lines)))
-print(sum(map(code2,lines)))
+print("Part 1: "+str(sum(map(code1,lines))))
+print("Part 2: "+str(sum(map(code2,lines))))
