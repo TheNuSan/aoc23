@@ -19,8 +19,8 @@ def findkeys(x, searchfunc):
     return list(sorted(filter(lambda a : a[0]>-1, [[searchfunc(x,k),v] for k,v in keys.items()])))
 
 def code2(x):
-    mastart = findkeys(x, lambda a,b: a.find(b))
-    maend = findkeys(x, lambda a,b: a.rfind(b))
+    mastart = findkeys(x, str.find)
+    maend = findkeys(x, str.rfind)
     #return x+": "+"".join(map(lambda a: str(a[1]), mastart))+"\n"
     #return x+": "+str(mastart[0][1])+str(maend[-1][1])+"\n"
     return int(str(mastart[0][1])+str(maend[-1][1]))
@@ -29,3 +29,4 @@ def code2(x):
 #print(''.join(map(code2,lines)))
 print("Part 1: "+str(sum(map(code1,lines))))
 print("Part 2: "+str(sum(map(code2,lines))))
+        
