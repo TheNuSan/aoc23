@@ -2,6 +2,7 @@ import os
 import sys
 import re
 from functools import reduce
+from math import prod
 
 wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_02_1.txt"), "r").readlines()
@@ -27,7 +28,7 @@ def code2(x):
         curbag[y[1]] = max(curbag[y[1]],int(y[0]))
 
     list(map(lambda y: list(map(test_entry2, y.split(","))), d[1].split(";")))
-    return reduce(lambda x,y: x*y , list(v for k,v in curbag.items()))
+    return prod(list(v for k,v in curbag.items()))
 
 #print(''.join(map(code2,lines)))
 print("Part 1: "+str(sum(map(code1,lines))))
