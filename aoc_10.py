@@ -84,11 +84,15 @@ for y in range (gy):
             else:
                 curline[x]=" "
             #curline[x]=str(deep)
+    ''' curline[0]=str(int(y/100)%10)
+    curline[1]=str(int(y/10)%10)
+    curline[2]=str(y%10)
+    curline[3]=' ' '''
     lines[y]="".join(curline)
 
-
-#print(''.join(lines)) # why does it stop after half the lines?
+sss=''.join(lines)
+print(sss) # why does it stop after half the lines? it's visual code
 #for i,l in enumerate(lines): print("{:03d}".format(i) + str(l.removesuffix("\n")))
-for i,l in enumerate(lines): print(l.removesuffix("\n"))
+#for i,l in enumerate(lines): print(l.removesuffix("\n"))
 print("Part 2: "+str(counter))
 
