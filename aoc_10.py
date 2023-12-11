@@ -91,8 +91,9 @@ for y in range (gy):
     lines[y]="".join(curline)
 
 sss=''.join(lines)
-print(sss) # why does it stop after half the lines? it's visual code
+#print(sss.translate(str.maketrans('LJF7-|', '└┘┌┐─│')))
+#print(sss) # why does it stop after half the lines? it's visual code
 #for i,l in enumerate(lines): print("{:03d}".format(i) + str(l.removesuffix("\n")))
-#for i,l in enumerate(lines): print(l.removesuffix("\n"))
+for i,l in enumerate(lines): print(l.removesuffix("\n").translate(str.maketrans('LJF7-|', '└┘┌┐─│')))
 print("Part 2: "+str(counter))
 
