@@ -5,12 +5,12 @@ from functools import reduce
 from functools import cmp_to_key
 from math import prod
 import math
+import time
 
 wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_12_1.txt"), "r").readlines()
 
-######## PART 1 ################
-
+######## PART 1 NAIVE IMPLEMENTATION ################
 
 def solvepart1naive(pos, dam):
     leeway=len(pos) - (sum(dam)+len(dam)-1)
@@ -76,6 +76,8 @@ def part1naive(l):
 
 # basic memoisation
 cache={}
+cachehit=0
+cachemiss=0
 
 debugoff=-1
 def printdebug(*args):
@@ -88,8 +90,13 @@ def debugsolve(st, li):
     # memoization search:
     memkey=st+str(li)
     if memkey in cache:
+        global cachehit
+        cachehit+=1
         return cache[memkey]
-    
+    else:
+        global cachemiss
+        cachemiss+=1
+
     val=solve(st,li)
 
     # memoization add:
@@ -224,8 +231,6 @@ def printdebug(*args): return
 #print("resultat:",part1(testline))
 #print("part 1: ",part1naive(testline))
 
-print("Part 1:",sum(part1(l) for l in lines))
-
 # let's test brute force part 2
 progress=0
 def part2(l):
@@ -243,6 +248,24 @@ def part2(l):
     #print(progress,"-",l.removesuffix("\n"),"->",val)
     return val
 
-print("Part 2:",sum(part2(l) for l in lines))
+t = time.process_time()
+print("Part 1:",sum(part1(l) for l in lines))
+print("       ",time.process_time()-t)
+print("cache size:",len(cache.keys()),"hit:",cachehit,"miss:",cachemiss,100*cachehit/(cachehit+cachemiss))
 
-#print("resultat:",part2(".???.??..#..?#??? 1,1,1,1"))
+cache={}
+cachehit=0
+cachemiss=0
+t = time.process_time()
+print("Part 2:",sum(part2(l) for l in lines))
+print("       ",time.process_time()-t)
+print("cache size:",len(cache.keys()),"hit:",cachehit,"miss:",cachemiss,100*cachehit/(cachehit+cachemiss))
+
+'''
+t = time.process_time()
+prog=0
+for l in lines:
+ prog+=1
+ print(prog,part2(l), time.process_time()-t )
+print("       ",time.process_time()-t)
+'''
