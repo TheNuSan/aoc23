@@ -14,6 +14,7 @@ wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_14_1.txt"), "r").read().split("\n")
 puzzle = [list(l) for l in lines]
 
+# Part 1, just straightforward push
 def part1(puz):
     gridx,gridy=len(puz[0]),len(puz)
     for i in range(gridx):
@@ -34,7 +35,9 @@ def counter_1(puz):
 #part1(puzzle)
 #print("Part 1:",counter_1(puzzle))
 
-# for part 2:
+# Part 2:
+# only iterate on the particles, not the whole board
+# use a dictionnary for the colision detection
 gridx,gridy=len(puzzle[0]),len(puzzle)
 # map of rocks:
 occu={(i,j):[(i,j),'#'] for j,p in enumerate(puzzle) for i,c in enumerate(p) if c=='#'}
@@ -57,16 +60,22 @@ occu |= {p[0]:p for p in parts}
 # but it's not needed for this puzzle, just where are particles
 # the great benefit here is that we can update the particles in any order
 def pushpart(p,distab,dx,dy):
+    # get distance to next rock in the direction
     dist=distab[p[0][1]][p[0][0]]
     if dist<1:
         return
+    # try to move directly to this position
     nk=(p[0][0]+dist*dx,p[0][1]+dist*dy)
     while dist>0:
+        # if the position is free, we found our target
         if not nk in occu:
             break
+        # if not, we got back a step and try again
         nk=(nk[0]-dx,nk[1]-dy)        
         dist-=1
+    # if we moved at all
     if dist>0:
+        # remove/re-insert the particle in the occupency map
         del occu[p[0]]
         p[0]=nk
         occu[p[0]]=p
@@ -91,14 +100,18 @@ def part2():
     goal=1000000000
     for i in range(goal):
         cycle()
+        # get a hash of the particles position, to see if it was already reached before
+        # if it did, it means we have a cycle, so we can stop
         ch=hash(tuple(p[0] for p in sorted(parts)))
         if ch in histo:
             debcycl=histo[ch]
             cycledur=i-debcycl
             print("Step",i,counter_2())
             # we found a repeating cycle!
+            # we can just skip all the next cycles up to when we almost reach the 1B goal
             cycleleft=(goal-i)%cycledur-1
             print("Hash FOUND! cycle:",debcycl,"cycles left:",cycleleft,"total cycles:",i+cycleleft)
+            # then we step the final few cycles left to reach the 1B goal
             for j in range(cycleleft):
                 cycle()
                 if j%100==0: print("Post cycle step",j)
@@ -110,8 +123,7 @@ part2()
 
 #print(parts)
 #print(occu)
-#printmap()
+printmap()
 
 print("Part 2:",counter_2())
 print("       ",time.process_time()-t)
-#print("\n".join([''.join(l) for l in puzzle]))
