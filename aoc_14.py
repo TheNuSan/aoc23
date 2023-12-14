@@ -39,6 +39,7 @@ gridx,gridy=len(puzzle[0]),len(puzzle)
 # map of rocks:
 occu={(i,j):[(i,j),'#'] for j,p in enumerate(puzzle) for i,c in enumerate(p) if c=='#'}
 
+# to speed up, compute the distance to the next rock in each direction
 dist_north=[[min(j,next((max(0,k-1) for k in range(gridy) if (i,j-k) in occu),j)) for i in range(gridx)] for j in range(gridy)]
 dist_south=[[min(gridy-j-1,next((max(0,k-1) for k in range(gridy) if (i,j+k) in occu),gridy-j-1)) for i in range(gridx)] for j in range(gridy)]
 dist_west=[[min(i,next((max(0,k-1) for k in range(gridx) if (i-k,j) in occu),i)) for i in range(gridx)] for j in range(gridy)]
@@ -46,10 +47,15 @@ dist_east=[[min(gridx-i-1,next((max(0,k-1) for k in range(gridx) if (i+k,j) in o
 
 #print("\n".join(["".join([str(i) for i in j]) for j in dist_east]))
 
-# add particles
+# create a particles for each O
 parts=[[(i,j),'O'] for j,p in enumerate(puzzle) for i,c in enumerate(p) if c=='O']
+# add the particles to the map
 occu |= {p[0]:p for p in parts}
 
+# this try to push a particle in a direction
+# with this method, we don't keep the order of the particles
+# but it's not needed for this puzzle, just where are particles
+# the great benefit here is that we can update the particles in any order
 def pushpart(p,distab,dx,dy):
     dist=distab[p[0][1]][p[0][0]]
     if dist<1:
@@ -64,49 +70,6 @@ def pushpart(p,distab,dx,dy):
         del occu[p[0]]
         p[0]=nk
         occu[p[0]]=p
-
-def push(i,j,dx,dy):
-    nk=(i,j)
-    if nk not in occu:
-        return
-    p=occu[nk]
-    if p[1]!='O':
-        return
-    del occu[nk]
-    while True:
-        nk=(nk[0]+dx,nk[1]+dy)
-        if nk[0]<0 or nk[0]>=gridx or nk[1]<0 or nk[1]>=gridy:
-            break
-        if nk in occu:
-            break
-        p[0]=nk
-    occu[p[0]]=p
-
-def push_north():
-    for i in range(gridx):
-        for j in range(gridy):
-            push(i,j,0,-1)
-
-def push_south():
-    for i in range(gridx):
-        for j in range(gridy-1,-1,-1):
-            push(i,j,0,1)
-
-def push_east():
-    for j in range(gridy):
-        for i in range(gridx-1,-1,-1):
-            push(i,j,1,0)
-
-def push_west():
-    for j in range(gridy):
-        for i in range(gridx):
-            push(i,j,-1,0)
-
-def cycle_old():
-    push_north()
-    push_west()
-    push_south()
-    push_east()
 
 def cycle():
     for p in parts: pushpart(p,dist_north,0,-1)
