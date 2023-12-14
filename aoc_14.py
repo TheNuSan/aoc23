@@ -9,7 +9,7 @@ import time
 
 wd=os.path.dirname(os.path.realpath(__file__))
 # read without the \n at the end
-lines = open(os.path.join(wd,"aoc_14_0.txt"), "r").read().split("\n")
+lines = open(os.path.join(wd,"aoc_14_1.txt"), "r").read().split("\n")
 puzzle = [list(l) for l in lines]
 
 def part1(puz):
@@ -38,15 +38,30 @@ gridx,gridy=len(puzzle[0]),len(puzzle)
 occu={(i,j):[(i,j),'#'] for j,p in enumerate(puzzle) for i,c in enumerate(p) if c=='#'}
 
 dist_north=[[min(j,next((max(0,k-1) for k in range(gridy) if (i,j-k) in occu),j)) for i in range(gridx)] for j in range(gridy)]
-dist_south=[[min(gridy-j-1,next((max(0,k-1) for k in range(gridy) if (i,j+k) in occu),j)) for i in range(gridx)] for j in range(gridy)]
+dist_south=[[min(gridy-j-1,next((max(0,k-1) for k in range(gridy) if (i,j+k) in occu),gridy-j-1)) for i in range(gridx)] for j in range(gridy)]
 dist_west=[[min(i,next((max(0,k-1) for k in range(gridx) if (i-k,j) in occu),i)) for i in range(gridx)] for j in range(gridy)]
-dist_east=[[min(gridx-i-1,next((max(0,k-1) for k in range(gridx) if (i+k,j) in occu),i)) for i in range(gridx)] for j in range(gridy)]
+dist_east=[[min(gridx-i-1,next((max(0,k-1) for k in range(gridx) if (i+k,j) in occu),gridx-i-1)) for i in range(gridx)] for j in range(gridy)]
 
 #print("\n".join(["".join([str(i) for i in j]) for j in dist_east]))
 
 # add particles
 parts=[[(i,j),'O'] for j,p in enumerate(puzzle) for i,c in enumerate(p) if c=='O']
 occu |= {p[0]:p for p in parts}
+
+def pushpart(p,distab,dx,dy):
+    dist=distab[p[0][1]][p[0][0]]
+    if dist<1:
+        return
+    nk=(p[0][0]+dist*dx,p[0][1]+dist*dy)
+    while dist>0:
+        if not nk in occu:
+            break
+        nk=(nk[0]-dx,nk[1]-dy)        
+        dist-=1
+    if dist>0:
+        del occu[p[0]]
+        p[0]=nk
+        occu[p[0]]=p
 
 def push(i,j,dx,dy):
     nk=(i,j)
@@ -85,15 +100,25 @@ def push_west():
         for i in range(gridx):
             push(i,j,-1,0)
 
-def cycle():
+def cycle_old():
     push_north()
     push_west()
     push_south()
     push_east()
 
+def cycle():
+    for p in parts: pushpart(p,dist_north,0,-1)
+    for p in parts: pushpart(p,dist_west,-1,0)
+    for p in parts: pushpart(p,dist_south,0,1)
+    for p in parts: pushpart(p,dist_east,1,0)
+
 def counter_2():
     return sum((gridy-j) for j in range(gridy) for i in range(gridx) if (i,j) in occu and occu[(i,j)][1]=='O')
     
+def printmap():
+    print("----------------")
+    print("\n".join(["".join([occu[(i,j)][1] if (i,j) in occu else "." for i in range(gridx)]) for j in range(gridy)]))
+
 #print(hash(tuple(tuple(p) for p in parts)))
 
 def part2():
@@ -111,15 +136,16 @@ def part2():
             cycleleft=(goal-i)%cycledur-1
             for j in range(cycleleft):
                 cycle()
+                if j%100==0: print("Post cycle step",j,counter_2())
             break
         histo[ch]=i
-        if i%100==0: print("Step",i,counter_2(),len(histo))
+        if i%100==0: print("Step",i,counter_2())
 
-#part2()
+part2()
 
 #print(parts)
 #print(occu)
-#print("\n".join(["".join([occu[(i,j)][1] if (i,j) in occu else "." for i in range(gridx)]) for j in range(gridy)]))
+#printmap()
 
 print("Part 2:",counter_2())
 #print("\n".join([''.join(l) for l in puzzle]))
