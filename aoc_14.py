@@ -7,6 +7,8 @@ from math import prod
 import math
 import time
 
+t = time.process_time()
+
 wd=os.path.dirname(os.path.realpath(__file__))
 # read without the \n at the end
 lines = open(os.path.join(wd,"aoc_14_1.txt"), "r").read().split("\n")
@@ -126,7 +128,7 @@ def part2():
     goal=1000000000
     for i in range(goal):
         cycle()
-        ch=hash(tuple(tuple(p) for p in parts))
+        ch=hash(tuple(p[0] for p in parts))
         if ch in histo:
             debcycl=histo[ch]
             cycledur=i-debcycl
@@ -136,10 +138,10 @@ def part2():
             cycleleft=(goal-i)%cycledur-1
             for j in range(cycleleft):
                 cycle()
-                if j%100==0: print("Post cycle step",j,counter_2())
+                if j%500==0: print("Post cycle step",j)
             break
         histo[ch]=i
-        if i%100==0: print("Step",i,counter_2())
+        if i%500==0: print("Step",i)
 
 part2()
 
@@ -148,4 +150,5 @@ part2()
 #printmap()
 
 print("Part 2:",counter_2())
+print("       ",time.process_time()-t)
 #print("\n".join([''.join(l) for l in puzzle]))
