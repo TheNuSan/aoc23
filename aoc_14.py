@@ -128,20 +128,20 @@ def part2():
     goal=1000000000
     for i in range(goal):
         cycle()
-        ch=hash(tuple(p[0] for p in parts))
+        ch=hash(tuple(p[0] for p in sorted(parts)))
         if ch in histo:
             debcycl=histo[ch]
             cycledur=i-debcycl
-            print("Hash",debcycl,"found!",cycledur)
             print("Step",i,counter_2())
             # we found a repeating cycle!
             cycleleft=(goal-i)%cycledur-1
+            print("Hash FOUND! cycle:",debcycl,"cycles left:",cycleleft,"total cycles:",i+cycleleft)
             for j in range(cycleleft):
                 cycle()
-                if j%500==0: print("Post cycle step",j)
+                if j%100==0: print("Post cycle step",j)
             break
         histo[ch]=i
-        if i%500==0: print("Step",i)
+        if i%100==0: print("Step",i)
 
 part2()
 
