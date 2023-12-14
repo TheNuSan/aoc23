@@ -102,6 +102,7 @@ def part2():
         cycle()
         # get a hash of the particles position, to see if it was already reached before
         # if it did, it means we have a cycle, so we can stop
+        # putting a sorted here did a x150 speedup has without it the cycle must get the particles in the same exact position, to it is much longer (~33k instead of ~170)
         ch=hash(tuple(p[0] for p in sorted(parts)))
         if ch in histo:
             debcycl=histo[ch]
