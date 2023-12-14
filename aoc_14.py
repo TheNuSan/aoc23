@@ -110,7 +110,7 @@ def part2():
             print("Step",i,counter_2())
             # we found a repeating cycle!
             # we can just skip all the next cycles up to when we almost reach the 1B goal
-            cycleleft=(goal-i)%cycledur-1
+            cycleleft=(goal-i-1)%cycledur
             print("Hash FOUND! cycle:",debcycl,"cycles left:",cycleleft,"total cycles:",i+cycleleft)
             # then we step the final few cycles left to reach the 1B goal
             for j in range(cycleleft):
