@@ -2,6 +2,7 @@ import os
 import copy
 import heapq
 import time
+from itertools import pairwise
 
 wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_17_1.txt"), "r").read().split("\n")
@@ -21,9 +22,30 @@ class Path:
     lastdircount=0
     #histo=[]
     def __str__(self):
-        return "Cost:"+str(self.cost)+" ["+str(self.posx)+","+str(self.posy)+"] "+str(self.lastdir)+"|"+str(self.lastdircount)+" Path:"+str(self.histo)
+        return "Cost:"+str(self.cost)+" ["+str(self.posx)+","+str(self.posy)+"] "+str(self.lastdir)+"|"+str(self.lastdircount)
     def printmap(self):
         #for y in range(gridy): print(''.join("■" if (x,y) in self.histo else str(grid[y][x]) for x in range(gridx)))
+        '''
+        maping=" .:ikM%G@"
+        tmp=[[maping[grid[y][x]-1] for x in range(gridx)] for y in range(gridy)]
+        for h1,h2 in pairwise(self.histo):
+            dix,diy=abs(h1[0]-h2[0]),abs(h1[1]-h2[1])
+            stx,sty=min(h1[0],h2[0]),min(h1[1],h2[1])
+            if dix>diy:
+                #car=">" if h2[0]>h1[0] else "<"
+                car="■"
+                #car="⭢" if h2[0]>h1[0] else "⭠"
+                for x in range(stx,stx+dix+1):
+                    tmp[sty][x]=car
+            else:
+                #car="v" if h2[1]>h1[1] else "^"
+                car="■"
+                #car="⭣" if h2[1]>h1[1] else "⭡"
+                for y in range(sty,sty+diy+1):
+                    tmp[y][stx]=car
+        
+        for y in range(gridy): print(''.join(tmp[y][x] for x in range(gridx)))
+        #'''
         print("No histo")
     def totalcost(self):
         return self.cost + abs(self.posx-(gridx-1)) + abs(self.posy-(gridy-1))
