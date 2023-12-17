@@ -1,9 +1,13 @@
 import os
 import copy
 import heapq
+import time
 
 wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_17_1.txt"), "r").read().split("\n")
+
+t = time.process_time()
+
 grid = [[int(c) for c in l] for l in lines]
 gridx,gridy=len(grid[0]),len(grid)
 
@@ -25,7 +29,9 @@ class Path:
         return self.cost + abs(self.posx-gridx-1) + abs(self.posy-gridy-1)
     # overload < operator
     def __lt__(self, other):
-        return self.totalcost() < other.totalcost()
+        # surprisingly the A* search is slower than the simple one
+        return self.cost < other.cost # explore lower cost first
+        #return self.totalcost() < other.totalcost() # A* search
 
 pool=[Path()]
 heapq.heapify(pool)
@@ -75,8 +81,8 @@ while pool and not end:
             #print(np)
             heapq.heappush(pool, np)
             #pool.append(np)
-    #pool.sort(key=lambda x: -x.cost) # depth search
-    #pool.sort(key=lambda x: -x.totalcost()) # A* search
+    #pool.sort(key=lambda x: -x.cost)
+    #pool.sort(key=lambda x: -x.totalcost())
     steps+=1
     if steps%10000==0:
         if len(pool)>0:
@@ -95,3 +101,4 @@ if end:
 else:
     print("No Path Found :(")
 
+print("       ",time.process_time()-t)
