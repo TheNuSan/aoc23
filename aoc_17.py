@@ -1,5 +1,6 @@
 import os
 import copy
+import heapq
 
 wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_17_1.txt"), "r").read().split("\n")
@@ -22,9 +23,12 @@ class Path:
         print("No histo")
     def totalcost(self):
         return self.cost + abs(self.posx-gridx-1) + abs(self.posy-gridy-1)
-
+    # overload < operator
+    def __lt__(self, other):
+        return self.totalcost() < other.totalcost()
 
 pool=[Path()]
+heapq.heapify(pool)
 visited={}
 
 #mindist,maxdist=0,3 # Part 1
@@ -32,8 +36,8 @@ mindist,maxdist=3,10 # Part 2
 
 steps=0
 end=None
-while pool and not end:    
-    p=pool.pop()
+while pool and not end:
+    p=heapq.heappop(pool)
     for i,d in enumerate(dirs):
         # direction should not do a 180
         nobacktrack = (i+2)%4!=p.lastdir
@@ -69,11 +73,12 @@ while pool and not end:
                 end=np
                 break
             #print(np)
-            pool.append(np)
+            heapq.heappush(pool, np)
+            #pool.append(np)
     #pool.sort(key=lambda x: -x.cost) # depth search
-    pool.sort(key=lambda x: -x.totalcost()) # A* search
+    #pool.sort(key=lambda x: -x.totalcost()) # A* search
     steps+=1
-    if steps%1000==0:
+    if steps%10000==0:
         if len(pool)>0:
             pp=pool[-1]
             #print("=-----------=")
