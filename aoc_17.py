@@ -26,7 +26,7 @@ class Path:
         #for y in range(gridy): print(''.join("■" if (x,y) in self.histo else str(grid[y][x]) for x in range(gridx)))
         print("No histo")
     def totalcost(self):
-        return self.cost + abs(self.posx-gridx-1) + abs(self.posy-gridy-1)
+        return self.cost + abs(self.posx-(gridx-1)) + abs(self.posy-(gridy-1))
     # overload < operator
     def __lt__(self, other):
         # surprisingly the A* search is slower than the simple one
