@@ -44,18 +44,22 @@ while pool and not end:
         if  p.lastdir<0 or (nobacktrack and maxlimit and minlimit):
             # cannot go in a direction, if mindist would make it go outside the limit anyway
             curmindist = (max(0,mindist-p.lastdircount) if i==p.lastdir else mindist) + 1
-            lpx,lpy = p.posx+d[0]*curmindist, p.posy+d[1]*curmindist
-            if lpx<0 or lpx>=gridx or lpy<0 or lpy>=gridy: continue
-            posx=p.posx+d[0]
-            posy=p.posy+d[1]
+            # compute final position in at least mindist blocks
+            posx,posy = p.posx+d[0]*curmindist, p.posy+d[1]*curmindist            
             if posx<0 or posx>=gridx or posy<0 or posy>=gridy: continue
-            ndc=p.lastdircount+1 if i==p.lastdir else 1
+            ndc=p.lastdircount
+            if i!=p.lastdir: ndc=0
+            # compute total cost of each steps
+            ncost=0
+            for j in range(1,curmindist+1):
+                ncost+=grid[p.posy+d[1]*j][p.posx+d[0]*j]
+                ndc+=1
             vk=(posx,posy,i,ndc)
             if vk in visited: continue
             visited[vk]=True
             np=copy.deepcopy(p)
             #np.histo=copy.deepcopy(p.histo)
-            np.cost+=grid[posy][posx]
+            np.cost+=ncost
             np.posx,np.posy=posx,posy
             #np.histo.append((p.posx,p.posy))
             np.lastdir=i
