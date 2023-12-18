@@ -24,6 +24,8 @@ for l in lines:
     posy+=[0,1,0,-1][dir]*dist
 points.append([posx,posy])
 minx,miny,maxx,maxy=min(minx,posx),min(miny,posy),max(maxx,posx),max(maxy,posy)
+minx,miny,maxx,maxy=minx-5,miny-5,maxx+5,maxy+5
+
 #print(points)
 print(minx,miny,maxx,maxy)
 
@@ -78,7 +80,7 @@ def filledges(pixels):
                 pixels[i,j] = (0, 0 ,0)
     
 
-def part1():
+def solve():
 
     sizex,sizey=maxx-minx+1,maxy-miny+1
     img = Image.new(mode="RGB", size=(sizex, sizey))
@@ -89,27 +91,42 @@ def part1():
     for y in range(miny,maxy+1):
         lim=y
         #relevant=[e for e in edgever if e[0][1]>=lim and e[1][1]<lim]
-        relevant=[e for e in edgever if min(e[0][1],e[1][1])<=lim and max(e[0][1],e[1][1])>=lim]
+        relevant=[e for e in edgever if min(e[0][1],e[1][1])<=lim and max(e[0][1],e[1][1])>lim]
         relevant.sort(key = lambda a: a[0][0])
-        prev=math.inf
-        hasprev=False
         totline=0
+        imgline=[0 for x in range(0,sizex)]
         if relevant:
             for r in relevant:
                 side=r[0][1]<r[1][1]
                 if side:
-                    totline += r[0][0]-prev+1
-                    for x in range(prev,r[0][0]+1):
-                        pv=pixels[x-minx,y-miny]
-                        pixels[x-minx,y-miny] = (pv[0], min(255,pv[2]+127), min(255,pv[1]+255))
-                    hasprev=False
+                    totline += r[0][0]
+                    for x in range(0,r[0][0]-minx+1):
+                        imgline[x]+=1
                     prev=r[0][0]+1
                 else:
-                    if not hasprev:
-                        hasprev=True
-                        prev=r[0][0]
-            total+=totline
+                    totline -= r[0][0]
+                    for x in range(0,r[0][0]-minx):
+                        imgline[x]-=1
+        relhor=[e for e in edgehor if e[0][1]==lim]
+        for r in relhor:
+            for x in range(min(r[0][0],r[1][0]),max(r[0][0],r[1][0])+1): imgline[x-minx]=1
+            '''
+            if r[0][0]<r[1][0]:
+                totline += (abs(r[0][0]-r[1][0])+1)
+                #for x in range(0,max(r[0][0],r[1][0])+1): imgline[x-minx]+=1
+            else:
+                totline -= (abs(r[0][0]-r[1][0])+1)
+                #for x in range(0,min(r[0][0],r[1][0])+1): imgline[x-minx]-=1
+            #'''
+                
+        # for now, just count
+        totline=0
+        for x in range(0,sizex):
+            pv=pixels[x,y-miny]
+            pixels[x,y-miny] = (pv[0], max(0,min(255,pv[2]+127 + 80*imgline[x])), min(255,pv[1]+(255 if imgline[x]==1 else 0)))
+            if imgline[x]==1: totline+=1
         #print(lim,totline,total)
+        total+=totline
 
     img.show()
     img.save('aoc_18_display.png')
@@ -119,5 +136,5 @@ def part1():
 #display()
 #displayedges()
 # 69861
-print("Part 1:",part1())
+print("Solution:",solve())
 
