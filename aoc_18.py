@@ -33,6 +33,8 @@ minx,miny,maxx,maxy=minx-5,miny-5,maxx+5,maxy+5
 # now separate the vertical/horizontal edges:
 edgehor = [[p1,p2] for p1,p2 in pairwise(points) if p1[0]!=p2[0]]
 #edgever = [[p1,p2] for p1,p2 in pairwise(points) if p1[1]!=p2[1]]
+# I want each pair of points, and also the points before/after the edge in a loop
+# this will let me know what type of edge it is
 edges = [[points[i],points[i+1],points[i-1] if i>0 else points[-2],points[i+2] if i<len(points)-2 else points[1]] for i in range(0,len(points)-1)]
 edgever = [x for x in edges if x[0][1]!=x[1][1]]
 
