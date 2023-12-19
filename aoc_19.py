@@ -81,3 +81,85 @@ def part1(part):
 
 part1value = sum(part1(x) for x in parts)
 print("Part 1:",part1value)
+
+# Part 2:
+# idea is to have parts with ranges in each variables
+# at each instuction, copy the parts for every test that could work
+# at the end, each part and so it's range will be either accepted or not
+# and we can simply sum that up
+
+class StateRange:
+    variables = [[1,4000],[1,4000],[1,4000],[1,4000]]
+    nextinst = "in"
+    def __str__(self):
+        return str(self.variables)
+    def combi(self):
+        val=1
+        for x in self.variables:
+            val *= x[1]-x[0]+1
+        return val
+    
+def part2():
+    basestate=StateRange()
+    states=[basestate]
+    acceptedstates=[]
+    rejectedstates=[]
+    while len(states)>0:
+        nextstates=[]
+        for st in states:
+            if st.nextinst=="A":
+                acceptedstates.append(st)
+                continue
+            if st.nextinst=="R":
+                rejectedstates.append(st)
+                continue
+            nextrules=instr[st.nextinst]
+            st.nextinst=None
+            for r in nextrules:
+                if r.testtype==0: # no test
+                    st.nextinst=r.dest
+                    nextstates.append(st)
+                    break
+                elif r.testtype==1: # <
+                    cv=st.variables[r.testvar]
+                    if cv[0] < r.testref and cv[1] >= r.testref: # need to split
+                        newstate=StateRange()
+                        newstate.variables=[[x[0],x[1]] for x in st.variables]
+                        newstate.nextinst=r.dest
+                        newstate.variables[r.testvar][1] = r.testref-1
+                        nextstates.append(newstate)
+                        cv[0] = r.testref
+                        st.nextinst=r.dest
+                    elif cv[1] < r.testref:
+                        st.nextinst=r.dest
+                        nextstates.append(st)
+                        break
+                    elif cv[0] >= r.testref:
+                        ...
+                    else:
+                        break
+                else: # >
+                    cv=st.variables[r.testvar]
+                    if cv[0] <= r.testref and cv[1] > r.testref: # need to split
+                        newstate=StateRange()
+                        newstate.variables=[[x[0],x[1]] for x in st.variables]
+                        newstate.nextinst=r.dest
+                        newstate.variables[r.testvar][0] = r.testref+1
+                        nextstates.append(newstate)
+                        cv[1] = r.testref
+                        st.nextinst=r.dest
+                    elif cv[1] <= r.testref:
+                        ...
+                    elif cv[0] > r.testref:
+                        st.nextinst=r.dest
+                        nextstates.append(st)
+                        break
+                    else:
+                        break
+        states = nextstates
+        #print("Step------\n"+'\n'.join(str(x) for x in states))
+        
+    
+    #print('\n'.join(str(x)+" -> "+str(x.combi()) for x in acceptedstates))
+    print("Part 2:",sum(x.combi() for x in acceptedstates))
+part2()
