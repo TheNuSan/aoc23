@@ -154,6 +154,7 @@ for i in range(len(mainconjs)):
 nodesections=[]
 foundnodes=[]
 cursection=finaloutputs
+cursection=[mainconjs[0]]
 while len(cursection)>0:
     nodesections.append([])
     nextsection=[]
@@ -168,7 +169,7 @@ while len(cursection)>0:
 nodepos={}
 for i,s in enumerate(nodesections):
     for j,n in enumerate(s):
-        nodepos[n]=(i*180+30,j*30+30)
+        nodepos[n]=(i*180+30,j*140-i*40+230)
 
 def CreateGame():
     pygame.init()
@@ -177,9 +178,10 @@ def CreateGame():
 
     run = True
     rect=pygame.draw.rect
+    circ=pygame.draw.circle
     line=pygame.draw.line
     while run:
-        for bp in range(5000):
+        for bp in range(1):
             ButtonPress()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -196,11 +198,14 @@ def CreateGame():
             for n in s:
                 pos=nodepos[n]
                 for l in n.outputs:
-                    goalx,goaly=nodepos[l]
-                    goalpos=(goalx,goaly+15)
-                    if goalpos[0]<=pos[0]:
-                        goalpos=(goalpos[0]+70,goalpos[1]-5)
-                    line(screen, collink[int(goalpos[0]>pos[0])], (pos[0],pos[1]+15), goalpos)
+                    if l in nodepos:
+                        goalx,goaly=nodepos[l]
+                        goalpos=(goalx,goaly+15)
+                        if goalpos[0]<=pos[0]:
+                            goalpos=(goalpos[0]+70,goalpos[1]-5)
+                        line(screen, collink[int(goalpos[0]>pos[0])], (pos[0],pos[1]+15), goalpos)
+                    else:
+                        circ(screen, (255,0,0), pos, 10)
                 rect(screen, coltype[n.type], (pos[0],pos[1],70,28))
                 if n.type==1: # flip-flop
                     rect(screen, colflip[int(n.flipflop)], (pos[0]+45,pos[1]+4,18,18))
