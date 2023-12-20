@@ -164,7 +164,7 @@ def CreateGame():
                 if event.key == K_ESCAPE:
                     run = False
         screen.fill((30, 0, 0))
-        font.render_to(screen, (200,5), str(presses), (0, 0, 0))
+        font.render_to(screen, (5,200), str(presses), (255, 255, 255))
         coltype=[(250, 250, 0),(250, 100, 0),(100, 250, 250),(250, 250, 250)]
         collink=[(255,255,255),(255,0,0)]
         colflip=[(0,255,0),(255,0,0)]
