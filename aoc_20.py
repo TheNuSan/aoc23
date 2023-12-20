@@ -127,6 +127,30 @@ def ButtonPress():
         pulses=nextpulses
     return highcounter,lowcounter
 
+# find all 4 main conjections:
+mainconjs=[m for m in modules.values() if m.type==2 and any(x.type==1 for x in m.outputs)]
+def find_child_list(m):
+    foundchild=[]
+    todo=[m]
+    while len(todo)>0:
+        x=todo.pop()
+        foundchild.append(x)
+        for y in x.inputs:
+            if y[0] not in foundchild:
+                todo.insert(0,y[0])
+    print(m.name,"->",", ".join(x.name for x in foundchild))
+    return foundchild
+
+childs=[]
+for x in mainconjs:
+    childs.append(find_child_list(x))
+for i in range(len(mainconjs)):
+    for j in range(len(mainconjs)):
+        if i!=j:
+            for x in childs[i]:
+                if x in childs[j]:
+                    print("Found",x.name,"in both",mainconjs[i].name,"and",mainconjs[j].name)
+
 nodesections=[]
 foundnodes=[]
 cursection=finaloutputs
