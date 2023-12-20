@@ -5,7 +5,7 @@ from pygame.locals import *
 import pygame.freetype
 
 wd=os.path.dirname(os.path.realpath(__file__))
-lines = open(os.path.join(wd,"aoc_20_1.txt"), "r").read().split("\n")
+lines = open(os.path.join(wd,"aoc_20_0d.txt"), "r").read().split("\n")
 for i in range(len(lines)):
     lines[i]=lines[i].replace("broadcaster","brd")
 lines.append("but -> brd")
@@ -66,6 +66,8 @@ rx = None
 if "rx" in modules:
     rx = modules["rx"]
 
+print("Outputs:",",".join(x.name for x in finaloutputs))
+
 def Part1():
     totalhigh,totallow=0,0
     for i in range(1000):
@@ -77,6 +79,7 @@ def Part1():
 
 part2running=True
 presses=0
+historic={}
 def Part2():
     while part2running:
         #print("----------------")
@@ -104,11 +107,11 @@ def ButtonPress():
                 highcounter+=1
             else:
                 lowcounter+=1
-            if not put and dest==rx:
-                print("RX ",put)
+            '''if not put and dest in finaloutputs:
+                print("Final Output ",dest.name,put)
                 nextpulses=[]
                 part2running=False
-                break
+                break'''
                 
             #print(src.name + " " + str(put) + " -> " + dest.name)
             if dest.type == 0: # broadcaster
@@ -116,6 +119,10 @@ def ButtonPress():
             elif dest.type == 1: # flipflop
                 if not put: # low pulse
                     dest.flipflop = not dest.flipflop
+                    if not dest in historic: historic[dest] = {}
+                    hd=historic[dest]
+                    if not presses in hd: hd[presses] = []
+                    hd[presses].append(dest.flipflop)
                     for x in dest.outputs: nextpulses.append([x,dest,dest.flipflop])
             elif dest.type == 2: # conjonction
                 for x in dest.inputs:
@@ -123,38 +130,20 @@ def ButtonPress():
                         x[1]=put
                         break
                 sndput=not all(x[1] for x in dest.inputs)
+                if not dest in historic: historic[dest] = {}
+                hd=historic[dest]
+                if not presses in hd: hd[presses] = []
+                hd[presses].append(sndput)
                 for x in dest.outputs: nextpulses.append([x,dest,sndput])
         pulses=nextpulses
     return highcounter,lowcounter
 
-# find all 4 main conjections:
-mainconjs=[m for m in modules.values() if m.type==2 and any(x.type==1 for x in m.outputs)]
-def find_child_list(m):
-    foundchild=[]
-    todo=[m]
-    while len(todo)>0:
-        x=todo.pop()
-        foundchild.append(x)
-        for y in x.inputs:
-            if y[0] not in foundchild:
-                todo.insert(0,y[0])
-    print(m.name,"->",", ".join(x.name for x in foundchild))
-    return foundchild
-
-childs=[]
-for x in mainconjs:
-    childs.append(find_child_list(x))
-for i in range(len(mainconjs)):
-    for j in range(len(mainconjs)):
-        if i!=j:
-            for x in childs[i]:
-                if x in childs[j]:
-                    print("Found",x.name,"in both",mainconjs[i].name,"and",mainconjs[j].name)
+for i in range(90):
+    ButtonPress()
 
 nodesections=[]
 foundnodes=[]
 cursection=finaloutputs
-cursection=[mainconjs[0]]
 while len(cursection)>0:
     nodesections.append([])
     nextsection=[]
@@ -169,20 +158,62 @@ while len(cursection)>0:
 nodepos={}
 for i,s in enumerate(nodesections):
     for j,n in enumerate(s):
-        nodepos[n]=(i*180+30,j*140-i*40+230)
+        nodepos[n]=(i*200+30,j*100-i*40+i*i*10+430)
+
+pygame.init()
+screen = pygame.display.set_mode((1920, 1080))
+font = pygame.freetype.Font(None, 24)
+rect=pygame.draw.rect
+circ=pygame.draw.circle
+line=pygame.draw.line
+
+coltype=[(250, 250, 0),(250, 100, 0),(100, 250, 250),(250, 250, 250)]
+
+def DrawGraph():
+    collink=[(255,255,255),(255,0,0)]
+    colflip=[(0,255,0),(255,0,0)]
+    for s in nodesections:
+        for n in s:
+            pos=nodepos[n]
+            for l in n.outputs:
+                if l in nodepos:
+                    goalx,goaly=nodepos[l]
+                    goalpos=(goalx,goaly+15)
+                    if goalpos[0]<=pos[0]:
+                        goalpos=(goalpos[0]+70,goalpos[1]-5)
+                    line(screen, collink[int(goalpos[0]>pos[0])], (pos[0],pos[1]+15), goalpos)
+                else:
+                    circ(screen, (255,0,0), pos, 10)
+            rect(screen, coltype[n.type], (pos[0],pos[1],70,28))
+            if n.type==1: # flip-flop
+                rect(screen, colflip[int(n.flipflop)], (pos[0]+45,pos[1]+4,18,18))
+            if n.type==2: # conjunction
+                rect(screen, colflip[int(all(x[1] for x in n.inputs))], (pos[0]+45,pos[1]+4,18,18))
+            font.render_to(screen, (pos[0]+5,pos[1]+5), n.name, (0, 0, 0))
+
+def DrawSignals():
+    px,py=90,70
+    for x in range(100):
+        if x%10==0:
+            ppx,ppy=px + x * 20,py - 70
+            rect(screen, (180,180,180), (ppx,ppy,2,330))
+            font.render_to(screen, (ppx+5,ppy+5), str(x), (255, 255, 255))
+        else:
+            rect(screen, (100,100,100), (px + x * 20,py - 40,2,300))
+        
+    for m,h in historic.items():
+        rect(screen, coltype[m.type], (px-75,py,70,28))
+        font.render_to(screen, (px-70,py+5), m.name, (0, 0, 0))
+        for t,r in h.items():
+            for i,f in enumerate(r):
+                rect(screen, (0,255,0) if f else (255,0,0), (px + t * 20 + i*4,py,2,40))
+        py += 50
 
 def CreateGame():
-    pygame.init()
-    screen = pygame.display.set_mode((1920, 1080))
-    font = pygame.freetype.Font(None, 24)
-
     run = True
-    rect=pygame.draw.rect
-    circ=pygame.draw.circle
-    line=pygame.draw.line
     while run:
-        for bp in range(1):
-            ButtonPress()
+        #for bp in range(1): ButtonPress()
+        
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -190,28 +221,9 @@ def CreateGame():
                 if event.key == K_ESCAPE:
                     run = False
         screen.fill((30, 0, 0))
-        font.render_to(screen, (5,200), str(presses), (255, 255, 255))
-        coltype=[(250, 250, 0),(250, 100, 0),(100, 250, 250),(250, 250, 250)]
-        collink=[(255,255,255),(255,0,0)]
-        colflip=[(0,255,0),(255,0,0)]
-        for s in nodesections:
-            for n in s:
-                pos=nodepos[n]
-                for l in n.outputs:
-                    if l in nodepos:
-                        goalx,goaly=nodepos[l]
-                        goalpos=(goalx,goaly+15)
-                        if goalpos[0]<=pos[0]:
-                            goalpos=(goalpos[0]+70,goalpos[1]-5)
-                        line(screen, collink[int(goalpos[0]>pos[0])], (pos[0],pos[1]+15), goalpos)
-                    else:
-                        circ(screen, (255,0,0), pos, 10)
-                rect(screen, coltype[n.type], (pos[0],pos[1],70,28))
-                if n.type==1: # flip-flop
-                    rect(screen, colflip[int(n.flipflop)], (pos[0]+45,pos[1]+4,18,18))
-                if n.type==2: # conjunction
-                    rect(screen, colflip[int(all(x[1] for x in n.inputs))], (pos[0]+45,pos[1]+4,18,18))
-                font.render_to(screen, (pos[0]+5,pos[1]+5), n.name, (0, 0, 0))
+        font.render_to(screen, (5,5), str(presses), (255, 255, 255))
+        DrawGraph()
+        DrawSignals()
         pygame.display.update()
     pygame.quit()
 
