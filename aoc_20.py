@@ -1,9 +1,15 @@
 import os
 import time
+import pygame
+from pygame.locals import *
+import pygame.freetype
 
 wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_20_1.txt"), "r").read().split("\n")
-lines.append("button -> broadcaster")
+for i in range(len(lines)):
+    lines[i]=lines[i].replace("broadcaster","brd")
+lines.append("but -> brd")
+
 class Module:
     name="None"
     inputs=[]
@@ -30,6 +36,8 @@ for l in lines:
         mod.name=sep[0]
     modules[mod.name] = mod
 
+finaloutputs=[]
+
 # second pass: link them (inputs and outputs)
 for l in lines:
     sep = l.split(" -> ")
@@ -46,12 +54,17 @@ for l in lines:
             nmod.inputs=[]
             nmod.outputs=[]
             modules[nmod.name] = nmod
+            finaloutputs.append(nmod)
             mod.outputs.append(nmod)
     for x in mod.outputs:
         x.inputs.append([mod,False])
 
 for m in modules.values():
     print(m)
+
+rx = None
+if "rx" in modules:
+    rx = modules["rx"]
 
 def Part1():
     totalhigh,totallow=0,0
@@ -62,10 +75,22 @@ def Part1():
         totallow+=curlow
     print("Part 1:",totallow,totalhigh,totallow*totalhigh)
 
+part2running=True
+presses=0
+def Part2():
+    while part2running:
+        #print("----------------")
+        ButtonPress()
+    print("Part 2:",presses)
+
+presses=0
 def ButtonPress():
+    global part2running
+    global presses
+    presses+=1
     # low pulses are False, high pulses are True
-    broad=modules["broadcaster"]
-    button=modules["button"]
+    broad=modules["brd"]
+    button=modules["but"]
     pulses=[[broad,button,False]]
     highcounter=0
     lowcounter=0
@@ -79,6 +104,12 @@ def ButtonPress():
                 highcounter+=1
             else:
                 lowcounter+=1
+            if not put and dest==rx:
+                print("RX ",put)
+                nextpulses=[]
+                part2running=False
+                break
+                
             #print(src.name + " " + str(put) + " -> " + dest.name)
             if dest.type == 0: # broadcaster
                 for x in dest.outputs: nextpulses.append([x,dest,put])
@@ -95,4 +126,66 @@ def ButtonPress():
                 for x in dest.outputs: nextpulses.append([x,dest,sndput])
         pulses=nextpulses
     return highcounter,lowcounter
-Part1()
+
+nodesections=[]
+foundnodes=[]
+cursection=finaloutputs
+while len(cursection)>0:
+    nodesections.append([])
+    nextsection=[]
+    for x in cursection:
+        foundnodes.append(x)
+        nodesections[-1].append(x)
+        for y in x.inputs:
+            if y[0] not in foundnodes:
+                nextsection.append(y[0])
+    cursection=nextsection
+
+nodepos={}
+for i,s in enumerate(nodesections):
+    for j,n in enumerate(s):
+        nodepos[n]=(i*180+30,j*30+30)
+
+def CreateGame():
+    pygame.init()
+    screen = pygame.display.set_mode((1920, 1080))
+    font = pygame.freetype.Font(None, 24)
+
+    run = True
+    rect=pygame.draw.rect
+    line=pygame.draw.line
+    while run:
+        for bp in range(5000):
+            ButtonPress()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            elif event.type == KEYUP:
+                if event.key == K_ESCAPE:
+                    run = False
+        screen.fill((30, 0, 0))
+        font.render_to(screen, (200,5), str(presses), (0, 0, 0))
+        coltype=[(250, 250, 0),(250, 100, 0),(100, 250, 250),(250, 250, 250)]
+        collink=[(255,255,255),(255,0,0)]
+        colflip=[(0,255,0),(255,0,0)]
+        for s in nodesections:
+            for n in s:
+                pos=nodepos[n]
+                for l in n.outputs:
+                    goalx,goaly=nodepos[l]
+                    goalpos=(goalx,goaly+15)
+                    if goalpos[0]<=pos[0]:
+                        goalpos=(goalpos[0]+70,goalpos[1]-5)
+                    line(screen, collink[int(goalpos[0]>pos[0])], (pos[0],pos[1]+15), goalpos)
+                rect(screen, coltype[n.type], (pos[0],pos[1],70,28))
+                if n.type==1: # flip-flop
+                    rect(screen, colflip[int(n.flipflop)], (pos[0]+45,pos[1]+4,18,18))
+                if n.type==2: # conjunction
+                    rect(screen, colflip[int(all(x[1] for x in n.inputs))], (pos[0]+45,pos[1]+4,18,18))
+                font.render_to(screen, (pos[0]+5,pos[1]+5), n.name, (0, 0, 0))
+        pygame.display.update()
+    pygame.quit()
+
+CreateGame()
+#Part1()
+#Part2()
