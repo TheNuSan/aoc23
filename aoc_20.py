@@ -19,6 +19,8 @@ class Module:
     flipflop=False
     conjunction=[]
     lowlist=[]
+    counthigh=0
+    countlow=0
     def __init__(self):
         self.lowlist=[]
     def __str__(self):
@@ -87,6 +89,19 @@ def Part2():
         ButtonPress()
     print("Part 2:",presses)
 
+mainnodename = "jg"
+testnode=finaloutputs[0]
+mainresults = []
+# pn 4001
+# zt 3923
+# jg 4091
+# qx 3847
+#if mainnodename in modules: testnode=modules[mainnodename]
+print(4001*3923*4091*3847)
+
+testpresses = 30000
+#testpresses = 4096
+
 presses=0
 def ButtonPress():
     global part2running
@@ -116,6 +131,10 @@ def ButtonPress():
                 
             #print(src.name + " " + str(put) + " -> " + dest.name)
             if dest.type == 0: # broadcaster
+                if put:
+                    dest.counthigh+=1
+                else:
+                    dest.countlow+=1
                 for x in dest.outputs: nextpulses.append([x,dest,put])
             elif dest.type == 1: # flipflop
                 if not put: # low pulse
@@ -124,6 +143,10 @@ def ButtonPress():
                     hd=historic[dest]
                     if not presses in hd: hd[presses] = []
                     hd[presses].append(dest.flipflop)
+                    if dest.flipflop:
+                        dest.counthigh+=1
+                    else:
+                        dest.countlow+=1
                     for x in dest.outputs: nextpulses.append([x,dest,dest.flipflop])
             elif dest.type == 2: # conjonction
                 for x in dest.inputs:
@@ -135,12 +158,24 @@ def ButtonPress():
                 hd=historic[dest]
                 if not presses in hd: hd[presses] = []
                 hd[presses].append(sndput)
+                if sndput:
+                    dest.counthigh+=1
+                else:
+                    dest.countlow+=1
                 for x in dest.outputs: nextpulses.append([x,dest,sndput])
+                if not sndput and dest == testnode:
+                    mainresults.append(presses)
+                    print(dest.name,presses)
+
         pulses=nextpulses
     return highcounter,lowcounter
 
-for i in range(200):
+for i in range(testpresses):
     ButtonPress()
+
+print(testnode.name,mainresults)
+print([(mainresults[i+1]-mainresults[i]) for i in range(len(mainresults)-1)])
+
 
 def find_child_list(m):
     foundchild=[]
@@ -159,12 +194,6 @@ cursection=finaloutputs
 
 mainconjs=[m for m in modules.values() if m.type==2 and any(x.type==1 for x in m.outputs)]
 print(mainconjs)
-
-testnode=finaloutputs[0]
-#if "pn" in modules: testnode=modules["pn"]
-#if "zt" in modules: testnode=modules["zt"]
-#if "jg" in modules: testnode=modules["jg"]
-if "qx" in modules: testnode=modules["qx"]
 
 cursection=[testnode]
 childs=find_child_list(testnode)
@@ -204,14 +233,9 @@ def send_bulk(presscount):
                 ...
                 #order+=1
                 #m.lowlist.append([src,p[1],pressout,order])
-                        
+            
         bulk=nextbulk
-send_bulk(math.floor(100000/24)-70)
-
-# pn: 4096
-# zt: 4096
-# jg: 4096
-# qx: 4096
+send_bulk(testpresses)
 
 nodesections=[]
 foundnodes=[]
@@ -263,6 +287,8 @@ def DrawGraph():
             if n.type==2: # conjunction
                 rect(screen, colflip[int(all(x[1] for x in n.inputs))], (pos[0]+45,pos[1]+4,18,18))
             font.render_to(screen, (pos[0]+5,pos[1]+5), n.name, (0, 0, 0))
+            font.render_to(screen, (pos[0]+5,pos[1]+35), str(n.countlow), (255, 255, 100))
+            
 
 def DrawSignals():
     px,py=90,70
@@ -318,6 +344,6 @@ def CreateGame():
         pygame.display.update()
     pygame.quit()
 
-CreateGame()
+#CreateGame()
 #Part1()
 #Part2()
