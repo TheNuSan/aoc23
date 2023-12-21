@@ -6,7 +6,7 @@ from pygame.locals import *
 import pygame.freetype
 
 wd=os.path.dirname(os.path.realpath(__file__))
-lines = open(os.path.join(wd,"aoc_20_0e.txt"), "r").read().split("\n")
+lines = open(os.path.join(wd,"aoc_20_1.txt"), "r").read().split("\n")
 for i in range(len(lines)):
     lines[i]=lines[i].replace("broadcaster","brd")
 lines.append("but -> brd")
@@ -65,8 +65,7 @@ for l in lines:
     for x in mod.outputs:
         x.inputs.append([mod,False])
 
-for m in modules.values():
-    print(m)
+#for m in modules.values(): print(m)
 
 print("Outputs:",",".join(x.name for x in finaloutputs))
 
@@ -143,7 +142,6 @@ def ButtonPress():
 for i in range(200):
     ButtonPress()
 
-mainconjs=[m for m in modules.values() if m.type==2 and any(x.type==1 for x in m.outputs)]
 def find_child_list(m):
     foundchild=[]
     todo=[m]
@@ -153,14 +151,20 @@ def find_child_list(m):
         for y in x.inputs:
             if y[0] not in foundchild:
                 todo.insert(0,y[0])
-    print(m.name,"->",", ".join(x.name for x in foundchild))
+    #print(m.name,"->",", ".join(x.name for x in foundchild))
     return foundchild
 
 
 cursection=finaloutputs
 
+mainconjs=[m for m in modules.values() if m.type==2 and any(x.type==1 for x in m.outputs)]
+print(mainconjs)
+
 testnode=finaloutputs[0]
-if "pn" in modules: testnode=modules["pn"]
+#if "pn" in modules: testnode=modules["pn"]
+#if "zt" in modules: testnode=modules["zt"]
+#if "jg" in modules: testnode=modules["jg"]
+if "qx" in modules: testnode=modules["qx"]
 
 cursection=[testnode]
 childs=find_child_list(testnode)
@@ -169,30 +173,45 @@ childs=find_child_list(testnode)
 loops={}
 
 broad=modules["brd"]
+button=modules["but"]
 
 def send_bulk(presscount):
     order=1
-    bulk=[[broad,False,presscount,order]]
+    bulk=[[button,broad,False,presscount,order]]
     while len(bulk)>0:
         nextbulk=[]
         for p in bulk:
             src=p[0]
-            for m in src.outputs:
-                if m.type==1: # flip-flop
-                    if not p[1]:
-                        pressout=math.floor(p[2]/2)
-                        if pressout>0:
-                            order+=1
-                            m.lowlist.append([src,True,pressout,order])
-                            nextbulk.append([m,True,pressout,order])
-                            m.lowlist.append([src,False,pressout,order])
-                            nextbulk.append([m,False,pressout,order])
-                elif m.type==2: # conjonction
+            cur=p[1]
+            if cur.type==0: # broadcaster
+                cur.lowlist.append([src,p[2],p[3],order])
+                for m in cur.outputs:
                     order+=1
-                    m.lowlist.append([src,p[1],pressout,order])
+                    nextbulk.append([cur,m,p[2],p[3],order])
+            elif cur.type==1: # flip-flop
+                if not p[2]:
+                    pressout=math.floor(p[3]/2)
+                    if pressout>0:
+                        #cur.lowlist.append([src,True,pressout,order])
+                        cur.lowlist.append([src,False,pressout,order])
+                        for m in cur.outputs:
+                            #order+=1
+                            #nextbulk.append([cur,m,True,pressout,order])
+                            order+=1
+                            nextbulk.append([cur,m,False,pressout,order])
+            elif cur.type==2: # conjonction
+                cur.lowlist.append([src,p[2],p[3],order])
+                ...
+                #order+=1
+                #m.lowlist.append([src,p[1],pressout,order])
                         
         bulk=nextbulk
-send_bulk(1000)
+send_bulk(math.floor(100000/24)-70)
+
+# pn: 4096
+# zt: 4096
+# jg: 4096
+# qx: 4096
 
 nodesections=[]
 foundnodes=[]
@@ -212,7 +231,7 @@ while len(cursection)>0:
 nodepos={}
 for i,s in enumerate(nodesections):
     for j,n in enumerate(s):
-        nodepos[n]=(i*200+30,j*80-i*40+i*i*10+530)
+        nodepos[n]=(i*200+30,j*80-i*40+i*i*10+80)
 
 pygame.init()
 screen = pygame.display.set_mode((1920, 1080))
@@ -268,13 +287,14 @@ def DrawSignals():
         py += 50
 
 def DrawLowList():
-    px,py=90,670
+    px,py=600,20
     for m in modules.values():
         if m not in childs:
             continue
         rect(screen, coltype[m.type], (px-75,py,70,28))
         font.render_to(screen, (px-70,py+5), m.name, (0, 0, 0))
-        strlist=str(m.lowlist)
+        #strlist=str(m.lowlist)
+        strlist=", ".join(x[0].name+" "+str(x[2]) for x in m.lowlist)
         font.render_to(screen, (px,py+5), strlist, (255, 255, 255))
         
         py += 50
@@ -294,7 +314,7 @@ def CreateGame():
         font.render_to(screen, (5,5), str(presses), (255, 255, 255))
         DrawGraph()
         DrawLowList()
-        DrawSignals()
+        #DrawSignals()
         pygame.display.update()
     pygame.quit()
 
