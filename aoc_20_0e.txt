@@ -1,0 +1,6 @@
+broadcaster -> a
+%a -> b, d
+%b -> c, d
+%c -> a
+&d -> e
+%e -> out
