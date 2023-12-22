@@ -1,5 +1,6 @@
 import os
 import math
+from math import floor
 from PIL import Image, ImageDraw
 
 wd=os.path.dirname(os.path.realpath(__file__))
@@ -13,6 +14,26 @@ print(gridx,gridy)
 print(startx,starty)
 startgridx,startgridy=gridx,gridy
 
+# there is a large empty diamond at 64 steps from the start
+# this is the key for it to be solvable at some specifics steps counts that can be arbitrarily large
+# so after initial 64, each 131 steps give a full regular diamond of the map full
+# so at each diamond, the amount of cells filled is not dependent of the exact path, but just on the size
+# where everything is at same distance
+# so next diamond is at 64 + 131 steps
+#
+# we cut the repeating square into 2 area, A and B 
+# --------
+# |B /\ B|
+# | /  \ |
+# |/  A \|
+# |\    /|
+# | \  / |
+# |B \/ B|
+# --------
+#
+# and each part A and B can be in two state, after an even number of steps or after an odd number of steps
+
+
 # compute parts:
 partAp = 0 # inside diamond, even
 partAi = 0 # inside diamond, odd
@@ -20,7 +41,7 @@ partBp = 0 # outside diamond, even
 partBi = 0 # outside diamond, odd
 
 print("--------------------------")
-diag=math.floor((gridx-1)/2)
+diag=floor((gridx-1)/2)
 for j,y in enumerate(map):
     for i,x in enumerate(y):
         if not map[j][i]: continue
@@ -48,21 +69,8 @@ print("Part Ai",partAi)
 print("Part Bp",partBp)
 print("Part Bi",partBi)
 
-
-repeat=1
-halfrepeat=math.floor(repeat/2)
-map=[[map[j%gridx][i%gridy] for i in range(gridx*repeat)] for j in range(gridy*repeat)]
-startx,starty=startx+startgridx*halfrepeat,starty+startgridy*halfrepeat
-gridx,gridy=gridx*repeat,gridy*repeat
-# lines on S row and column are empty, maybe that is a key?
-#print(lines[starty])
-#print(''.join(x[startx] for x in lines))
-#print("starts:",startx,starty)
-# also there is a diamond at 64 steps from start
-# where everything is at same distance
-# so next diamond is at 64 + 131 steps
 totalsteps=26501365
-prevdiamond=math.floor((totalsteps-64)/131)
+prevdiamond=floor((totalsteps-64)/131)
 prevsteps=prevdiamond*131+64
 print("prevdiamond",prevdiamond)
 print("prevsteps:",prevsteps)
@@ -73,25 +81,40 @@ prevdiamond += 1
 
 # there is 202300 expanding diamond steps around the original diamond
 
-# pair
-# diamond 1: 3847 A pair ?
-# diamond 2: 34893
+def compute_diamon_direct(x):
+    
+    # part 1 depend on eveness of the number of steps
+    even=x%2==0
+    A1 = partAp if even else partAi
+    A2 = partAi if even else partAp
+    B=partBi+partBp
 
-# impair
-# diamond 1: 3957 A impair ?
-# diamond 2: 35223
-# diamond 3: 97645
-#print("Test 2 Ai:",partAi + 4*partAp + 2*partBp + 2*partBi)
-#print("Test 2 Ap:",partAp + 4*partAi + 2*partBp + 2*partBi)
-#print("Test 3 Ai:",partAi + 4*partAp + 8*partAi + 6*partBp + 6*partBi)
+    # quantity of B parts
+    diasize = (2*x-1)*(2*x-1)
+    mulB = int((diasize-1)/4)
+
+    # there is two separate A parts
+    # here is the central one
+    fac1=floor((x-1)/2)
+    fac1b=floor((fac1)/2)*(fac1+1)
+    if fac1%2==1: fac1b += floor((fac1+1)/2)
+    fac1c=8*fac1b
+    
+    # here is the other A part
+    fac2=floor((x)/2)
+    fac2b=fac2*fac2*4
+
+    dirvalue = A1 + fac1c * A1 + fac2b * A2 + mulB * B
+
+    print("part 2 direct:",dirvalue)
+
 
 def compute_diamond_area(steps):
     B=partBi+partBp
     mulA1,mulA2=0,0
     mulamount=4
-    # this could be made into a direct formula
-    # but there is only about 200k steps
-    # so lets just iterate through it
+    # there is only about 200k steps
+    # so we can just iterate through it
     for x in range(1,steps+1):
         even=x%2==0
         A1 = partAp if even else partAi
@@ -100,7 +123,7 @@ def compute_diamond_area(steps):
         mulB = int((diasize-1)/4)
         value = A1 + mulA1 * A1 + mulA2 * A2 + mulB * B
         if x==prevdiamond:
-            print("Part 2:",value)
+            print("Part 2 iterative:",value)
         if even:
             mulA1+=mulamount
         else:
@@ -108,12 +131,20 @@ def compute_diamond_area(steps):
         mulamount+=4
 
 compute_diamond_area(prevdiamond)
-# 637537341306357 is right !
+compute_diamon_direct(prevdiamond)
 
 # Part 1:
+
+# repeat system for testing
+repeat=1
+halfrepeat=floor(repeat/2)
+map=[[map[j%gridx][i%gridy] for i in range(gridx*repeat)] for j in range(gridy*repeat)]
+startx,starty=startx+startgridx*halfrepeat,starty+startgridy*halfrepeat
+gridx,gridy=gridx*repeat,gridy*repeat
+
 cur=set()
 cur.add((startx,starty))
-for x in range(64+1):
+for x in range(64):
     nextcur=set()
     for p in cur:
         for dx,dy in [(-1,0),(1,0),(0,-1),(0,1)]:
