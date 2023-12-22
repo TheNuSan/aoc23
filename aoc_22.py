@@ -4,65 +4,83 @@ import math
 wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_22_1.txt"), "r").read().split("\n")
 
-vrac=[[[int(x) for x in c.split(',')] for c in l.split('~')] for l in lines]
-gridx=max(max(b[0][0],b[1][0]) for b in vrac)+1
-gridy=max(max(b[0][1],b[1][1]) for b in vrac)+1
-gridz=max(max(b[0][2],b[1][2]) for b in vrac)+1
-print(gridx,gridy,gridz)
-blocks=sorted(vrac, key=lambda x: min(x[0][2],x[1][2]))
 names="ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    
+blockcounter=0
+
+class Block:
+    name="$"
+    start=[]
+    end=[]
+    top=[]
+    down=[]
+    def __init__(self, start, end):
+        global blockcounter
+        self.name=names[blockcounter%len(names)]
+        blockcounter+=1
+        self.start=min(start,end)
+        self.end=[x for x in max(start,end)] # we need to store a copy in case start==end
+        self.top=[]
+        self.down=[]
+    def __str__(self):
+        return self.name + " " + str(self.start) + " " + str(self.end)
+    def __repr__(self):
+        return self.name
+
+vrac=[]
+for l in lines:
+    cc=[[int(x) for x in c.split(',')] for c in l.split('~')]
+    vrac.append(Block(cc[0],cc[1]))
+
+gridx=max(b.end[0] for b in vrac)+1
+gridy=max(b.end[1] for b in vrac)+1
+gridz=max(b.end[2] for b in vrac)+1
+print(gridx,gridy,gridz)
+blocks=sorted(vrac, key=lambda x: x.start[2])
+
+#print(",".join(str(x) for x in blocks))
+
 def print_side():
     bp=[['-' if z==gridz-1 else '.' for x in range(gridx)] for z in range(gridz)]
-    for i,b in enumerate(blocks):
-        sx,ex=min(b[0][0],b[1][0]),max(b[0][0],b[1][0])
-        sy,ey=min(b[0][1],b[1][1]),max(b[0][1],b[1][1])
-        sz,ez=min(b[0][2],b[1][2]),max(b[0][2],b[1][2])
-        
-        bx,nx=sx,ex
-        #bx,nx=sy,ey
+    for b in blocks:
+        #bx,nx=b.start[0],b.end[0]
+        bx,nx=b.start[1],b.end[1]
         for x in range(bx,nx+1):
-            for z in range(sz,ez+1):
-                bp[gridz-z-1][x]=names[i%26]
+            for z in range(b.start[2],b.end[2]+1):
+                bp[gridz-z-1][x]=b.name
     print('\n'.join(''.join(x) for x in bp))
 
+#print_side()
+
 heightmap=[[[0,None] for x in range(gridx)] for y in range(gridy)]
-support=[]
-for i,b in enumerate(blocks):
-    sx,ex=min(b[0][0],b[1][0]),max(b[0][0],b[1][0])
-    sy,ey=min(b[0][1],b[1][1]),max(b[0][1],b[1][1])
-    sz,ez=min(b[0][2],b[1][2]),max(b[0][2],b[1][2])
+
+for b in blocks:
     curz=0
-    for x in range(sx,ex+1):
-        for y in range(sy,ey+1):
+    for x in range(b.start[0],b.end[0]+1):
+        for y in range(b.start[1],b.end[1]+1):
             curz=max(curz,heightmap[y][x][0])
     
-    dz=sz-curz-1
-    b[0][2]-=dz
-    b[1][2]-=dz
-    suplist=[]
-    for x in range(sx,ex+1):
-        for y in range(sy,ey+1):
+    dz=b.start[2]-curz-1
+    b.start[2]-=dz
+    b.end[2]-=dz
+
+    for x in range(b.start[0],b.end[0]+1):
+        for y in range(b.start[1],b.end[1]+1):
             hm=heightmap[y][x]
-            if hm[1] and hm[0]==sz-dz-1 and not hm[1] in suplist:
-                suplist.append(hm[1])
-            heightmap[y][x] = [ez-dz,b]
-    support.append(suplist)
+            if hm[1] and hm[0]==b.start[2]-1:
+                if not hm[1] in b.down: b.down.append(hm[1])
+                if not b in hm[1].top: hm[1].top.append(b)
+            heightmap[y][x] = [b.end[2],b]
 
-print(blocks)
-print(heightmap)
-
-candestroy=0
-supporter=[0 for x in support]
-for i,b in enumerate(support):
-    if len(b)==1:
-        for x in b:
-            supporter[blocks.index(x)]+=1
+#print(blocks)
+#print(heightmap)
 
 print_side()
-for i,b in enumerate(support):
-    print(names[i%26],', '.join(names[blocks.index(x)%26] for x in b))
+#for b in blocks: print(b.name,"->",', '.join(x.name for x in b.top))
 
-print(', '.join(names[i%26]+"="+str(x) for i,x in enumerate(supporter)))
+# 386
+# we can destroy any block that have nothing on top or where all top on blocks have more than 1 support 
+candestroy=[b for b in blocks if len(b.top)==0 or all(len(f.down)>1 for f in b.top)]
+#print(candestroy)
+print(len(candestroy))
 
-print(len([1 for x in supporter if x==0]))
+#'''
