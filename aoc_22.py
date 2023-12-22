@@ -77,10 +77,43 @@ for b in blocks:
 print_side()
 #for b in blocks: print(b.name,"->",', '.join(x.name for x in b.top))
 
-# 386
 # we can destroy any block that have nothing on top or where all top on blocks have more than 1 support 
 candestroy=[b for b in blocks if len(b.top)==0 or all(len(f.down)>1 for f in b.top)]
 #print(candestroy)
-print(len(candestroy))
+print("Part 1:",len(candestroy)) # 386
 
-#'''
+def is_supported(b, base, exceptions):
+    if b in exceptions:
+        return False
+    if b.start[2]==1:
+        return True
+    if b.start[2]<=base.end[2]:
+        return True
+    for s in b.down:
+        if is_supported(s,base,exceptions):
+            return True
+    exceptions.append(b)
+    return False
+
+def destroy_part(base):
+    todo=[base]
+    visited=[]
+    falling=[base]
+    stable=[]
+    while len(todo):
+        next=todo.pop()
+        if next in visited: continue
+        if next in stable: continue
+        visited.append(next)
+        for t in next.top:
+            if is_supported(t, base, falling):
+                stable.append(t)
+            else:
+                todo.append(t)
+
+    #print("falling",falling)
+    #print("stable",stable)
+    return len(falling)-1 # - the base
+
+part2=sum(destroy_part(b) for b in blocks)
+print("Part 2:",part2)
