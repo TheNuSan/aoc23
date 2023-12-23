@@ -1,5 +1,5 @@
 import os
-import math
+import time
 
 wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_23_1.txt"), "r").read().split("\n")
@@ -103,28 +103,28 @@ def find_longuest_steep():
     #print(sorted(paths, reverse=True))
 
 def find_longuest_all():
-    towalk=[(start,0,[start])]
+    towalk=[(start,0,set([start]))] # set are faster to check than list
     longuest=0
     pathfound=0
     while len(towalk):
         nxt,dist,hist=towalk.pop()
         for nn,d in nxt.all:
             if nn not in hist:
-                towalk.append((nn,dist+d,hist+[nn]))
+                nh=set(hist)
+                nh.add(nn)
+                towalk.append((nn,dist+d,nh))
                 if nn == end:
                     #print("path:",hist+[nn],dist+d)
                     pathfound+=1
+                    if pathfound%50000==0: print("   - paths found:",pathfound)
                     longuest=max(longuest, dist+d)
+    print("total paths found:",pathfound)
     print("Part 2:",longuest)
-    #print("paths found:",pathfound)
-    #print(sorted(paths, reverse=True))
-
-print(len(nodes)) 
-# 1262816 too high
-
+    
+t=time.process_time()
 if is_part_1:
     find_longuest_steep()
 else:
     find_longuest_all()
-
+print("Process took",time.process_time()-t,"s")
 #print('\n'.join(str(x) for x in nodes.values()))
