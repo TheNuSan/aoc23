@@ -6,37 +6,17 @@ import matplotlib.pyplot as plt
 wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_25_1.txt"), "r").read().split("\n")
 
-class Component:
-    name="Empty"
-    links=[]
-    def __init__(self,name):
-        self.name=name
-        self.links=[]
-    def __str__(self) -> str:
-        return self.name + " " + str(self.links)
-    def __repr__(self) -> str:
-        return self.name
-
 gra = nx.Graph()
 
 comps={}
 for l in lines:
     pa=l.split(": ")
-    ca=comps.get(pa[0], None)
-    if not ca:
-        gra.add_node(pa[0])
-        ca = Component(pa[0])
-        comps[ca.name] = ca
+    gra.add_node(pa[0])
     for x in pa[1].split():
-        co=comps.get(x, None)
-        if not co:
-            gra.add_node(x)
-            co = Component(x)
-            comps[co.name] = co
-        ca.links.append(co)
-        co.links.append(ca)
+        gra.add_node(x)
         gra.add_edge(pa[0],x)
 
+# I'm a bit lazy today, let's just use graph ploting with networkx to visualy find the 3 links to break
 is_real_deal=True
 if is_real_deal:
     gra.remove_edge("jxd","bbz")
@@ -47,7 +27,7 @@ else:
     gra.remove_edge("nvd","jqt")
     gra.remove_edge("cmg","bvb")
 
-#print("\n".join(str(x) for x in comps.values()))
+# then get the two sub-graphs
 subs=nx.connected_components(gra)
 lens=[len(x) for x in subs]
 print(", ".join(str(x) for x in lens))
