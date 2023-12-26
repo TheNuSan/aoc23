@@ -106,6 +106,9 @@ def flatten(r,dir):
 
 laser=Ray3(Point3(24, 13, 10), Vector3(-3, 1, 2))
 
+#25.087728259526394, Point3(236791014726783.22, 271014556863310.25, 328486884021718.69)
+# Axis: Vector3(-0.54, -0.42, 0.73)]
+# -0.5384898531927461 -0.417001288752925 0.7322148613534516
 random.seed(1234)
 samples=50000
 randscale=0.5
@@ -115,7 +118,7 @@ for x in range(samples):
     axis=Vector3(random.uniform(-1, 1),random.uniform(-1, 1),random.uniform(-1, 1))
     if x>10000:
         randscale *= 0.999
-        axis = best[1] + axis*randscale
+        axis = best[2] + axis*randscale
     axis.normalize()
     if abs(axis)<=0.001:
         continue
@@ -144,8 +147,9 @@ for x in range(samples):
         #print(a,b,"No enough intersections",len(interpos))
 
 print("best:",best)
+print("best axis:",best[2].x,best[2].y,best[2].z)
 print("ref:",Vector3(-3, 1, 2).normalized())
-bestref=Ray3(best[1],best[2])
+#bestref=Ray3(best[1],best[2])
 #laser=Line3(Point3(24, 13, 10), Vector3(-3, 1, 2))
 
 '''
