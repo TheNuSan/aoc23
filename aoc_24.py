@@ -104,16 +104,61 @@ def flatten(r,dir):
     return r2
 
 
-laser=Ray3(Point3(24, 13, 10), Vector3(-3, 1, 2))
-
+#laser=Ray3(Point3(24, 13, 10), Vector3(-3, 1, 2))
+centerpos=Point3(236791014726812.16, 271014556863332.75, 328486884021705.75)
+founddir=Vector3(0.5384898531927084, 0.41700128875288917, -0.7322148613534998)
+laser=Ray3(centerpos + (founddir *-3000000000000*500), founddir)
 #25.087728259526394, Point3(236791014726783.22, 271014556863310.25, 328486884021718.69)
 # Axis: Vector3(-0.54, -0.42, 0.73)]
 # -0.5384898531927461 -0.417001288752925 0.7322148613534516
+#
+# best of best:
+# [0.0, Vector3(236791014726812.16, 271014556863332.75, 328486884021705.75), Vector3(0.54, 0.42, -0.73)]
+# 0.5384898531927084 0.41700128875288917 -0.7322148613534998
+
+def find_best_axis_multiple():
+    best=[math.inf,-1]
+    for x in range(1,100000):
+        vx=founddir*x
+        diff=abs(vx.x-round(vx.x))+abs(vx.y-round(vx.y))+abs(vx.z-round(vx.z))
+        if diff<best[0]:
+            best=[diff,x]
+    print(best)
+
+def find_axis_dist():
+    interpos=[]
+    for x in hail:
+        inter,pos=intersectpos(laser,x)
+        if inter:
+            dist=centerpos.distance(pos)
+            interpos.append(dist)
+    interpos.sort()
+    interpos2=[]
+    for x in interpos:
+        interpos2.append((x-interpos[0])/2741)
+
+    best=[math.inf,-1]
+    for u in range(1,10000):
+        vx=founddir*x
+        diff=0
+        for x in interpos2:
+            cx=x*u/2741
+            diff+=abs(cx-round(cx))
+        if diff<best[0]:
+            best=[diff,u]
+    print(best) # 6766
+    print(', '.join(str(x*best[1]/2741) for x in interpos2))
+
+find_axis_dist()
+
+# print(founddir*2741)
+
+'''
 random.seed(1234)
 samples=50000
 randscale=0.5
 best=[math.inf,Point3(0,0,0),Vector3(0,0,0)]
-raynum=50
+raynum=5
 for x in range(samples):
     axis=Vector3(random.uniform(-1, 1),random.uniform(-1, 1),random.uniform(-1, 1))
     if x>10000:
@@ -122,7 +167,8 @@ for x in range(samples):
     axis.normalize()
     if abs(axis)<=0.001:
         continue
-    base=flatten(hail[0],axis)
+    firstnum=random.randint(0,max(0, len(hail)-raynum-1))
+    base=flatten(hail[firstnum],axis)
     interpos=[]
     raycc=min(raynum,len(hail))
     for i in range(1,raycc):
@@ -151,6 +197,11 @@ print("best axis:",best[2].x,best[2].y,best[2].z)
 print("ref:",Vector3(-3, 1, 2).normalized())
 #bestref=Ray3(best[1],best[2])
 #laser=Line3(Point3(24, 13, 10), Vector3(-3, 1, 2))
+#'''
+
+# now we found an approximate axis and center, we should:
+# find all intersections points and sort them along the laser
+# get all the distance between each points, find what factor can make them integer
 
 '''
 for r in hail:
@@ -162,6 +213,7 @@ for r in hail:
         print("Not colliding")
 '''
 
+'''
 pygame.init()
  
 # create the display surface object
@@ -206,10 +258,10 @@ while run:
         elif event.type == MOUSEBUTTONDOWN:
             ...
         elif event.type == KEYDOWN:
-            if event.key == K_UP: viewangle_y=max(-3.1415,min(3.1415,viewangle_y+0.1))
-            if event.key == K_DOWN: viewangle_y=max(-3.1415,min(3.1415,viewangle_y-0.1))
-            if event.key == K_LEFT: viewangle_x+=0.1
-            if event.key == K_RIGHT: viewangle_x-=0.1
+            if event.key == K_UP: viewangle_y=max(-3.1415,min(3.1415,viewangle_y+0.05))
+            if event.key == K_DOWN: viewangle_y=max(-3.1415,min(3.1415,viewangle_y-0.05))
+            if event.key == K_LEFT: viewangle_x+=0.05
+            if event.key == K_RIGHT: viewangle_x-=0.05
             
     qc = Quaternion.new_rotate_euler(viewangle_x, viewangle_y, 0)
 
@@ -217,7 +269,6 @@ while run:
 
     for x in range(min(500000,len(hail))): drawray(hail[x], (255,255,255))
 
-    '''
     random.seed(1234)
     samples=1
     best=[math.inf,Vector3(0,0,0)]
@@ -257,11 +308,12 @@ while run:
             #print(a,b,"No enough intersections",len(interpos))
         #drawray(Ray3(Point3(0,0,0)+axis*50, axis), col)
         drawline(Point3(0,0,0)+axis*(bounds+2),Point3(0,0,0)+axis*bounds, col)
-    '''
 
     #drawray(laser, (0,255,0))
     #drawray(Ray3(Point3(0,0,0),best[1]), (255,255,0))
-    drawline(best[1]-best[2]*nsc*500,best[1]+best[2]*nsc*500, (0,255,0))
+    #drawline(best[1]-best[2]*nsc*500,best[1]+best[2]*nsc*500, (0,255,0))
+    #drawline(centerpos-founddir*nsc*500,centerpos+founddir*nsc*500, (0,255,0))
 
     # Draws the surface object to the screen.
     pygame.display.update()
+#'''
