@@ -116,12 +116,19 @@ for x in range(samples):
         ...
         #print(a,b,"No enough intersections",len(interpos))
 
-#print("best:",best)
+print("best center:",best[1].x,best[1].y,best[1].z)
 print("best axis:",best[2].x,best[2].y,best[2].z)
 
 centerpos=Point3(0,0,0)+best[1] # we need a point, not a vector
-founddir=-best[2] # todo: should automatically find the side of the ray direction
-farpos=centerpos + (founddir * -3000000000000*5) # we estimate the starting position being far way
+founddir=-best[2]
+farpos=centerpos + (founddir * -150000000000000) # we estimate the starting position being far way
+iscol,colpos=intersectpos(Ray3(farpos, founddir),hail[0])
+if not iscol: # check if we are on the correct side of the ray, if not invert the ray direction
+    print("Opposite direction")
+    founddir=-founddir
+    farpos=centerpos + (founddir * -150000000000000)
+
+print("far pos approx:",farpos)
 #founddir=Vector3(-0.5384898531927084, -0.41700128875288917, 0.7322148613534998)
 #founddir=Vector3(-164.00, -127.00, 223.00)
 #farpos=Point3(363206674204110, 368909610239045, 156592420220258)
@@ -150,6 +157,8 @@ def find_axis_dist():
     # compute the distance between the start of our test laser and the actual start of the laser
     timeoffset=laserdists[0][1]-laserdists[0][0]
     
+    laseraboutdist=farpos + founddir*timeoffset
+
     # the new laser direction is just the old one scaled with the found speed
     newdir=laserspeed*founddir
     # rounding it seems to be better, but it may just be my dataset
@@ -157,12 +166,13 @@ def find_axis_dist():
     print(founddir)
     
     # the new laser start position is moved according to the offset we found
-    laseraboutdist=farpos + founddir*timeoffset
+    
     print(laserspeed,timeoffset,laseraboutdist)
     farpos = Point3(round(laseraboutdist.x),round(laseraboutdist.y),round(laseraboutdist.z))
 
 # we do the computation twice, the first one is not precise enough
 # the second one will have a good founddir and farpos to work with
+find_axis_dist()
 find_axis_dist()
 find_axis_dist()
 
