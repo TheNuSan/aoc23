@@ -3,8 +3,6 @@ import time
 from euclid import *
 from itertools import combinations
 import random
-import pygame
-from pygame.locals import *
 
 wd=os.path.dirname(os.path.realpath(__file__))
 lines = open(os.path.join(wd,"aoc_24_1.txt"), "r").read().split("\n")
@@ -23,7 +21,7 @@ for l in lines:
     hail.append(Ray3(Point3(*pa[0]),Vector3(*pa[1])))
     hailv.append(Vector3(*pa[1]))
 
-def intersect2(r1, r2, minx,maxx,miny,maxy):
+def intersect2Dprecise(r1, r2, minx,maxx,miny,maxy):
     li = r1.connect(r2)
     if abs(li.v)<0.001:
         x,y=li.p.x,li.p.y
@@ -32,7 +30,10 @@ def intersect2(r1, r2, minx,maxx,miny,maxy):
             return True
     return False
 
-def intersect(r1, r2):
+def intersect2D(r31, r32):
+    # should use 2D ray intersection instead
+    r1=Ray3(Point3(r31.p.x,r31.p.y),Vector3(r31.v.x,r31.v.y))
+    r2=Ray3(Point3(r32.p.x,r32.p.y),Vector3(r32.v.x,r32.v.y))
     if r1.v.normalized() == r2.v.normalized():
         # should check if lines are colinear!
         print("Parallel",r1,r2)
@@ -55,10 +56,10 @@ def intersect(r1, r2):
         tp2 = (r2.p + mu2*r2.v) + intp1
         #print(li.p,intp1,tp1,tp2)
         minx,maxx,miny,maxy=areaminx+intp1.x,areamaxx+intp1.x,areaminy+intp1.y,areamaxy+intp1.y
-        return intersect2(Ray3(tp1,r1.v),Ray3(tp2,r2.v),minx,maxx,miny,maxy)
+        return intersect2Dprecise(Ray3(tp1,r1.v),Ray3(tp2,r2.v),minx,maxx,miny,maxy)
     return False
 
-#print("Part 1:",sum(1 if intersect(a,b) else 0 for a,b in combinations(hail, 2)))
+print("Part 1:",sum(1 if intersect2D(a,b) else 0 for a,b in combinations(hail, 2)))
 
 # part 2:
 
@@ -247,121 +248,3 @@ for r in hail:
     else:
         print("Not colliding")
 '''
-
-#'''
-pygame.init()
- 
-# create the display surface object
-# of specific dimension.
-screen = pygame.display.set_mode((1000, 1000))
- 
-
-laser2=Ray3(Point3(24, 13, 10), Vector3(-3.5, 1.3, 2))
-
-viewangle_x = 0
-viewangle_y = 0
-#scale=10
-scale=1.0/2000000000000.0
-nsc=3000000000000
-def drawray(x,col):
-    r = x.copy()
-    r.p=qc*r.p
-    r.v=qc*r.v
-    pygame.draw.line(screen, col, (r.p.x*scale+500, r.p.y*scale+500), ((r.p.x+r.v.x*nsc)*scale+500, (r.p.y+r.v.y*nsc)*scale+500), 2)
-
-def drawline(p1,p2,col):
-    p1=qc*p1.copy()
-    p2=qc*p2.copy()
-    pygame.draw.line(screen, col, (p1.x*scale+500, p1.y*scale+500), (p2.x*scale+500, p2.y*scale+500), 2)
-
-
-def drawsamples():
-    random.seed(1234)
-    samples=1
-    best=[math.inf,Vector3(0,0,0)]
-    for x in range(samples):
-        #axis=Vector3(random.uniform(-1, 1),random.uniform(-1, 1),random.uniform(-1, 1))
-        axis=laser.v
-        axis.normalize()
-        if abs(axis)<=0.001:
-            continue
-        col = (0,0,255)
-        base=flatten(hail[0],axis)
-        drawray(base, (0,255,255))
-        interpos=[]
-        for i in range(1,len(hail)):
-            other=flatten(hail[i],axis)
-            drawray(other, (0,255,255))
-            inter,pos=intersectpos(base,other)
-            if inter:
-                drawline(pos,pos+Vector3(0,5,0), (255,255,0))
-                interpos.append(pos)
-        if len(interpos)==len(hail)-1:
-            center=interpos[0]
-            for i in range(1,len(interpos)):
-                center=center+interpos[i]
-            center*=1.0/len(interpos)
-            bounds=0
-            for i in interpos:
-                bounds+=abs(center-i)
-            bounds/=len(interpos)
-            drawline(center,center+Vector3(0,-5,0), (255,0,0))
-            if bounds<best[0]:
-                best=[bounds,axis]
-            #print(len(interpos),"intersections:",bounds,center)
-        else:
-            col=(255,0,127)
-            ...
-            #print(a,b,"No enough intersections",len(interpos))
-        #drawray(Ray3(Point3(0,0,0)+axis*50, axis), col)
-        drawline(Point3(0,0,0)+axis*(bounds+2),Point3(0,0,0)+axis*bounds, col)
-
-def drawgrid():
-    sca,ps=1,10
-    for x in laserd:
-        a,b=x[0]/2500000000,x[1]/10000000000
-        pygame.draw.line(screen, (255,255,255), (a*sca+500, b*sca+500), ((a)*sca+500, (b+ps)*sca+500), 2)
-
-
-run = True 
-# Creating a while loop
-while run:
- 
-    # Iterating over all the events received from
-    # pygame.event.get()
-    for event in pygame.event.get():
- 
-        # If the type of the event is quit
-        # then setting the run variable to false
-        if event.type == QUIT:
-            run = False
- 
-        # if the type of the event is MOUSEBUTTONDOWN
-        # then storing the current position
-        elif event.type == MOUSEBUTTONDOWN:
-            ...
-        elif event.type == KEYDOWN:
-            if event.key == K_UP: viewangle_y=max(-3.1415,min(3.1415,viewangle_y+0.05))
-            if event.key == K_DOWN: viewangle_y=max(-3.1415,min(3.1415,viewangle_y-0.05))
-            if event.key == K_LEFT: viewangle_x+=0.05
-            if event.key == K_RIGHT: viewangle_x-=0.05
-            
-    qc = Quaternion.new_rotate_euler(viewangle_x, viewangle_y, 0)
-
-    screen.fill((0,0,0))
-
-    #for x in range(min(500000,len(hail))): drawray(hail[x], (255,255,255))
-
-    #drawsamples()
-    drawgrid()
-
-    #x[0]/10000000000))+" "+str(int(x[1]/1000000000000
-
-    #drawray(laser, (0,255,0))
-    #drawray(Ray3(Point3(0,0,0),best[1]), (255,255,0))
-    #drawline(best[1]-best[2]*nsc*500,best[1]+best[2]*nsc*500, (0,255,0))
-    #drawline(centerpos-founddir*nsc*500,centerpos+founddir*nsc*500, (0,255,0))
-
-    # Draws the surface object to the screen.
-    pygame.display.update()
-#'''
